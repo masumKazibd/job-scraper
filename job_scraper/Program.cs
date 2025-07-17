@@ -13,7 +13,8 @@ class JobScraper
     private static readonly List<string> SkillsToFind = new List<string>
     {
         "java", "spring", "springboot", "spring boot", "hibernate", "jpa",
-        "microservices", "rest", "sql", "oracle", "mysql", "postgresql"
+        "microservices", "rest", "api", "sql", "oracle", "mysql", "postgresql",
+        "docker", "kubernetes", "aws", "maven", "git", "oop"
     };
 
     // ফলাফল সংরক্ষণের জন্য
@@ -24,31 +25,29 @@ class JobScraper
         Console.WriteLine("--- Initializing Selenium WebDriver ---");
 
         // Chrome ড্রাইভার সেটআপ
-        IWebDriver driver = new ChromeDriver();
+        var options = new ChromeOptions();
+        options.AddArgument("--headless"); // ব্রাউজার উইন্ডো না দেখিয়ে ব্যাকগ্রাউন্ডে চালানোর জন্য
+        options.AddArgument("--log-level=3"); // কনসোলে অপ্রয়োজনীয় বার্তা না দেখানোর জন্য
+        IWebDriver driver = new ChromeDriver(options);
 
         Console.WriteLine($"--- Starting Scraper for Keyword: '{SearchKeyword}' ---");
 
-        int maxPages = 1; // টেস্ট করার জন্য শুধু ১টি পেইজ
+        int maxPages = 2; // ২টি পেইজ থেকে ডেটা সংগ্রহ করা হবে
         for (int pageNum = 1; pageNum <= maxPages; pageNum++)
         {
-            string pageUrl = $"https://jobs.bdjobs.com/jobsearch.asp?txtsearch={SearchKeyword}&fcat=-1&qOT=0&iCat=0&Country=0&qPosted=0&qDeadline=0&Newspaper=0&qJobNature=0&qJobLevel=0&qExp=0&qAge=0&hidOrder=&pg={pageNum}&rpp=50&hidJobSearch=JobSearch&MPostings=&ver=&strFlid_fvalue=&strFilterName=&hClickLog=0&earlyAccess=0&fcatId=&hPopUpVal=1";
-            //string pageUrl = $"https://jobs.bdjobs.com/jobsearch.asp?txtsearch={SearchKeyword}&pg={pageNum}&rpp=50";
+            string pageUrl = $"https://jobs.bdjobs.com/jobsearch.asp?txtsearch={SearchKeyword}&fcat=-1&qOT=0&iCat=0&Country=0&qPosted=0&qDeadline=0&Newspaper=0&qJobNature=0&qJobLevel=0&qExp=0&qAge=0&hidOrder=&pg={pageNum}&rpp=50&hidJobSearch=JobSearch";
             Console.WriteLine($"\n[INFO] Scraping Page: {pageNum}");
 
             try
             {
                 driver.Navigate().GoToUrl(pageUrl);
+                Console.WriteLine("[INFO] Waiting for page content to load...");
+                Thread.Sleep(5000);
 
-                // জাভাস্ক্রিপ্ট লোড হওয়ার জন্য ৫ সেকেন্ড অপেক্ষা করা
-                Console.WriteLine("[INFO] Waiting for JavaScript to load content...");
-                Thread.Sleep(5000); // 5 সেকেন্ড অপেক্ষা
-
-                // পেইজের সম্পূর্ণ HTML নেওয়া
                 string pageHtml = driver.PageSource;
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(pageHtml);
 
-                // সঠিক কন্টেইনার ক্লাস ব্যবহার করে জব পোস্টগুলো খুঁজে বের করা
                 var jobContainers = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 'norm-jobs-wrapper')]");
 
                 if (jobContainers != null)
@@ -57,16 +56,12 @@ class JobScraper
 
                     foreach (var container in jobContainers)
                     {
-                        // কন্টেইনারের ভেতর থেকে লিঙ্ক (a ট্যাগ) খুঁজে বের করা
                         var linkNode = container.SelectSingleNode(".//a");
                         if (linkNode != null)
                         {
                             string jobUrl = linkNode.GetAttributeValue("href", string.Empty);
-                            Console.WriteLine($"\n  [INFO] Processing job: {jobUrl}");
-
-                            // নতুন ট্যাবে জব ডিটেইলস পেইজ খোলা এবং ডেটা সংগ্রহ করা
                             ProcessJobDetailsPage(driver, jobUrl);
-                            Thread.Sleep(2000);
+                            Thread.Sleep(1000);
                         }
                     }
                 }
@@ -84,7 +79,6 @@ class JobScraper
 
         driver.Quit();
 
-        // --- ফলাফল প্রিন্ট করা ---
         Console.WriteLine("\n\n--- Final Company-Skill Analysis ---");
         if (companySkillsDb.Count == 0)
         {
@@ -102,26 +96,28 @@ class JobScraper
 
     private static void ProcessJobDetailsPage(IWebDriver driver, string url)
     {
-        // নতুন ট্যাব খুলে সেখানে যাওয়া
-        driver.SwitchTo().NewWindow(WindowType.Tab);
-        driver.Navigate().GoToUrl(url);
-        Thread.Sleep(3000); // পেইজ লোডের জন্য অপেক্ষা
-
+        var originalTab = driver.CurrentWindowHandle;
         try
         {
+            driver.SwitchTo().NewWindow(WindowType.Tab);
+            driver.Navigate().GoToUrl(url);
+            Thread.Sleep(3000);
+
             var detailDoc = new HtmlDocument();
             detailDoc.LoadHtml(driver.PageSource);
 
-            // কোম্পানির নাম এবং স্কিল খুঁজে বের করা
-            string companyName = detailDoc.DocumentNode.SelectSingleNode("//h2[contains(@class, 'company-name')]")?.InnerText.Trim() ?? "Unknown Company";
-            string descriptionText = detailDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'job-description')]")?.InnerText.ToLower() ?? "";
+            string companyName = detailDoc.DocumentNode.SelectSingleNode("(//h2)[1]")?.InnerText.Trim() ?? "Unknown Company";
+            string descriptionText = detailDoc.GetElementbyId("responsibilitiesSection")?.InnerText.ToLower() ?? "";
 
             var foundSkills = new HashSet<string>();
-            foreach (var skill in SkillsToFind)
+            if (!string.IsNullOrEmpty(descriptionText))
             {
-                if (System.Text.RegularExpressions.Regex.IsMatch(descriptionText, $@"\b{skill}\b"))
+                foreach (var skill in SkillsToFind)
                 {
-                    foundSkills.Add(skill);
+                    if (System.Text.RegularExpressions.Regex.IsMatch(descriptionText, $@"\b{skill}\b"))
+                    {
+                        foundSkills.Add(skill);
+                    }
                 }
             }
 
@@ -132,7 +128,7 @@ class JobScraper
                     companySkillsDb[companyName] = new HashSet<string>();
                 }
                 companySkillsDb[companyName].UnionWith(foundSkills);
-                Console.WriteLine($"  ✅ SUCCESS: Found skills for '{companyName}': {string.Join(", ", foundSkills)}");
+                Console.WriteLine($"  ✅ SUCCESS: Found skills for '{companyName}'");
             }
         }
         catch (Exception ex)
@@ -142,7 +138,7 @@ class JobScraper
         finally
         {
             driver.Close();
-            driver.SwitchTo().Window(driver.WindowHandles.First());
+            driver.SwitchTo().Window(originalTab);
         }
     }
 }
