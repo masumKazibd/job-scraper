@@ -8,7 +8,7 @@ using System.Linq;
 
 class JobScraper
 {
-    private static readonly string SearchKeyword = "Software";
+    private static readonly string SearchKeyword = ".Net";
     private static readonly List<string> SkillsToFind = new List<string>
 {
     // C# and .NET Ecosystem
@@ -63,7 +63,7 @@ class JobScraper
 
         Console.WriteLine($"--- Starting Scraper for Keyword: '{SearchKeyword}' ---");
 
-        int maxPages = 2; // ২টি পেইজ থেকে ডেটা সংগ্রহ করা হবে
+        int maxPages = 2;
         for (int pageNum = 1; pageNum <= maxPages; pageNum++)
         {
             string pageUrl = $"https://jobs.bdjobs.com/jobsearch.asp?txtsearch={SearchKeyword}&fcat=-1&qOT=0&iCat=0&Country=0&qPosted=0&qDeadline=0&Newspaper=0&qJobNature=0&qJobLevel=0&qExp=0&qAge=0&hidOrder=&pg={pageNum}&rpp=50&hidJobSearch=JobSearch";
@@ -159,7 +159,7 @@ class JobScraper
                     companySkillsDb[companyName] = new HashSet<string>();
                 }
                 companySkillsDb[companyName].UnionWith(foundSkills);
-                Console.WriteLine($"  ✅ SUCCESS: Found skills for '{companyName}'");
+                Console.WriteLine($"  ✅ SUCCESS: Found skills for '{companyName}': {string.Join(", ", foundSkills)}");
             }
         }
         catch (Exception ex)
