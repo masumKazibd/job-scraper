@@ -8,14 +8,45 @@ using System.Linq;
 
 class JobScraper
 {
-    // --- কনফিগারেশন ---
-    private static readonly string SearchKeyword = "JAVA";
+    private static readonly string SearchKeyword = "Software";
     private static readonly List<string> SkillsToFind = new List<string>
-    {
-        "java", "spring", "springboot", "spring boot", "hibernate", "jpa",
-        "microservices", "rest", "api", "sql", "oracle", "mysql", "postgresql",
-        "docker", "kubernetes", "aws", "maven", "git", "oop"
-    };
+{
+    // C# and .NET Ecosystem
+    "c#", ".net", "dotnet", ".net core", "asp.net", "asp.net core", "dotnet core",
+    "asp.net mvc", "mvc", "web api", "restful api", "rest", "api",
+    "entity framework", "ef core", "dapper", "ado.net", "linq",
+    "blazor", "razor pages", "signalr", "wpf", "wcf", "f#", "vb.net",
+
+    // Node.js & JavaScript Backend
+    "node.js", "nodejs", "node", "express.js", "express", "nestjs",
+    "npm", "yarn",
+
+    // Frontend & Angular Ecosystem
+    "angular", "angularjs", "typescript", "javascript", "rxjs",
+    "ngrx", "ngxs", "angular material", "primeng", "karma", "jasmine",
+    "react", "vue", "jquery", "html", "css", "scss",
+    
+    // Programming Languages (Other)
+    "java", "python", "dart", "go", "kotlin", "php", "scala",
+
+    // Frameworks & Platforms (Java)
+    "spring", "springboot", "spring boot", "hibernate", "jpa", "maven",
+
+    // Architecture & Concepts
+    "oop", "microservices", "clean architecture", "domain driven design", "ddd",
+    "solid", "design patterns", "state management",
+
+    // Databases
+    "sql", "sql server", "mssql", "mysql", "postgresql", "oracle",
+    "mongodb", "redis", "elasticsearch", "nosql",
+    
+    // DevOps & Tools
+    "docker", "kubernetes", "k8s", "jenkins", "git", "gitlab", "cicd", "ci/cd",
+    "azure devops", "terraform",
+    
+    // Cloud
+    "aws", "azure", "gcp"
+};
 
     // ফলাফল সংরক্ষণের জন্য
     private static Dictionary<string, HashSet<string>> companySkillsDb = new Dictionary<string, HashSet<string>>();
