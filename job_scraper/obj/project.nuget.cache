@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "V8GgXITMZAk=",
+  "success": true,
+  "projectFilePath": "D:\\Projects\\job_scraper\\job_scraper\\job_scraper\\job_scraper.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hp\\.nuget\\packages\\htmlagilitypack\\1.12.1\\htmlagilitypack.1.12.1.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\selenium.webdriver\\4.34.0\\selenium.webdriver.4.34.0.nupkg.sha512",
+    "C:\\Users\\hp\\.nuget\\packages\\selenium.webdriver.chromedriver\\138.0.7204.15700\\selenium.webdriver.chromedriver.138.0.7204.15700.nupkg.sha512"
+  ],
+  "logs": []
+}
